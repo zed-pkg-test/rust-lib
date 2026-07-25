@@ -1,5 +1,5 @@
 [package]
-org = "zedtest"
+org = "zed-pkg-test"
 name = "rust-lib"
 version = "1.0.0"
 description = "A Rust crate sourced via zed (complements cargo/crates.io)."
