@@ -1,0 +1,9 @@
+[package]
+org = "zedtest"
+name = "rust-lib"
+version = "1.0.0"
+description = "A Rust crate sourced via zed (complements cargo/crates.io)."
+license = "MIT"
+[package.repository]
+vcs = "git"
+url = "https://github.com/zed-pkg-test/rust-lib"
