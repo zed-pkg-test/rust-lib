@@ -47,9 +47,11 @@ jobs:
 
           assert cargo["name"] == zed["name"]
           assert cargo["version"] == zed["version"]
+          assert cargo["description"] == zed["description"]
           assert cargo["license"] == zed["license"]
+          assert cargo["repository"] == zed["repository"]["url"]
+          assert cargo["readme"] == "README.md"
           assert zed["org"] == "zed-pkg-test"
-          assert zed["repository"]["url"] == "https://github.com/zed-pkg-test/rust-lib"
           PY
 
       - name: Format, lint, and test
@@ -64,6 +66,7 @@ jobs:
           set -euo pipefail
           cargo package --allow-dirty --list > "$RUNNER_TEMP/package-files.txt"
           grep -Fxq Cargo.toml "$RUNNER_TEMP/package-files.txt"
+          grep -Fxq README.md "$RUNNER_TEMP/package-files.txt"
           grep -Fxq src/lib.rs "$RUNNER_TEMP/package-files.txt"
           if grep -Eq '(^|/)(target|\.zed)/|(^|/)Cargo\.lock$' "$RUNNER_TEMP/package-files.txt"; then
             echo "Cargo package contains generated or local state" >&2
