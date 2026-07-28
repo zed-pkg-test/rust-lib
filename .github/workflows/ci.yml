@@ -1,0 +1,90 @@
+name: package CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Validate workflow
+        uses: docker://rhysd/actionlint@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
+        with:
+          args: .github/workflows/ci.yml
+
+      - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
+        with:
+          toolchain: "1.97.0"
+          components: rustfmt, clippy
+
+      - name: Verify Zed and Cargo metadata agree
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import tomllib
+          from pathlib import Path
+
+          with Path("Cargo.toml").open("rb") as handle:
+              cargo = tomllib.load(handle)["package"]
+          with Path(".zpkg.toml").open("rb") as handle:
+              zed = tomllib.load(handle)["package"]
+
+          assert cargo["name"] == zed["name"]
+          assert cargo["version"] == zed["version"]
+          assert cargo["description"] == zed["description"]
+          assert cargo["license"] == zed["license"]
+          assert cargo["repository"] == zed["repository"]["url"]
+          assert cargo["readme"] == "README.md"
+          assert zed["org"] == "zed-pkg-test"
+          PY
+
+      - name: Format, lint, and test
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --all-targets -- -D warnings
+          cargo test --all-targets
+
+      - name: Audit Cargo package contents
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git ls-files --error-unmatch Cargo.lock >/dev/null 2>&1; then
+            echo "Library source checkout must not track Cargo.lock" >&2
+            exit 1
+          fi
+          cargo package --allow-dirty --list > "$RUNNER_TEMP/package-files.txt"
+          cat "$RUNNER_TEMP/package-files.txt"
+          grep -Fxq Cargo.toml "$RUNNER_TEMP/package-files.txt"
+          grep -Fxq README.md "$RUNNER_TEMP/package-files.txt"
+          grep -Fxq src/lib.rs "$RUNNER_TEMP/package-files.txt"
+          grep -Fxq Cargo.lock "$RUNNER_TEMP/package-files.txt"
+          if grep -Eq '(^|/)(target|\.zed)/' "$RUNNER_TEMP/package-files.txt"; then
+            echo "Cargo package contains build or local Zed state" >&2
+            exit 1
+          fi
+          cargo package --allow-dirty
+
+      - name: Upload package-content diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: cargo-package-files
+          path: ${{ runner.temp }}/package-files.txt
+          if-no-files-found: warn
+          retention-days: 7
