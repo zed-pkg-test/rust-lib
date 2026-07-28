@@ -64,13 +64,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          if git ls-files --error-unmatch Cargo.lock >/dev/null 2>&1; then
+            echo "Library source checkout must not track Cargo.lock" >&2
+            exit 1
+          fi
           cargo package --allow-dirty --list > "$RUNNER_TEMP/package-files.txt"
           cat "$RUNNER_TEMP/package-files.txt"
           grep -Fxq Cargo.toml "$RUNNER_TEMP/package-files.txt"
           grep -Fxq README.md "$RUNNER_TEMP/package-files.txt"
           grep -Fxq src/lib.rs "$RUNNER_TEMP/package-files.txt"
-          if grep -Eq '(^|/)(target|\.zed)/|(^|/)Cargo\.lock$' "$RUNNER_TEMP/package-files.txt"; then
-            echo "Cargo package contains generated or local state" >&2
+          grep -Fxq Cargo.lock "$RUNNER_TEMP/package-files.txt"
+          if grep -Eq '(^|/)(target|\.zed)/' "$RUNNER_TEMP/package-files.txt"; then
+            echo "Cargo package contains build or local Zed state" >&2
             exit 1
           fi
           cargo package --allow-dirty
