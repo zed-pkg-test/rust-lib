@@ -2,7 +2,10 @@
 name = "rust-lib"
 version = "1.0.0"
 edition = "2021"
+description = "A Rust crate sourced via zed for interoperability tests."
 license = "MIT"
+repository = "https://github.com/zed-pkg-test/rust-lib"
+readme = "README.md"
 
 [lib]
 name = "rust_lib"
