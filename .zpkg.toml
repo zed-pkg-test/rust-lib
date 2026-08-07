@@ -1,13 +1,17 @@
 [package]
 org = "zed-pkg-test"
 name = "rust-lib"
-version = "1.0.0"
+version = "1.0.1"
 description = "A Rust crate sourced via zed (complements cargo/crates.io)."
 license = "MIT"
+
 [package.repository]
 vcs = "git"
 url = "https://github.com/zed-pkg-test/rust-lib"
 
+# Cargo-native dependencies remain in Cargo.toml/Cargo.lock. A Zed
+# [dependencies] table is intentionally absent because it names Zed packages,
+# not crates.io packages.
 [publish]
 exclude = ["Cargo.lock"]
 smoke_test = 'sh "$ZED_PKG_TEST_TARGET/scripts/zed-smoke.sh"'
