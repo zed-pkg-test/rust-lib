@@ -39,6 +39,9 @@ mod tests {
 
     #[test]
     fn cargo_registry_dependency_is_exercised() {
-        assert_eq!(format_count(18_446_744_073_709_551_615), "18446744073709551615");
+        assert_eq!(
+            format_count(18_446_744_073_709_551_615),
+            "18446744073709551615"
+        );
     }
 }
