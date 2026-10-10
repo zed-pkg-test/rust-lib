@@ -1,0 +1,11 @@
+[package]
+name = "oreslang-actor-admission-model"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Deterministic model of Oreslang actor request/message admission and native single-flight execution"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]

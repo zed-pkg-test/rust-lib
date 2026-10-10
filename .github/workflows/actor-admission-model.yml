@@ -1,0 +1,19 @@
+name: actor-admission-model
+
+on:
+  push:
+    branches: [main, "feat/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  actor-admission-rust:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Check actor admission invariants
+        run: cargo test --manifest-path tools/actor-admission-model/Cargo.toml --offline --all-targets
